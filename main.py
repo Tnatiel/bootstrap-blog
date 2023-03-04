@@ -1,10 +1,26 @@
+import smtplib
+import ssl
+from email.mime.text import MIMEText
 from datetime import datetime
-from flask import Flask, render_template, request
 import requests as req
+from flask import Flask, render_template, request
 
+EMAIL = "ntgk666@gmail.com"
 POSTS = req.get("https://api.npoint.io/511981ad9e97d831283f").json()
 app = Flask(__name__)
 app.config['CURRENT_YEAR'] = datetime.now().year
+
+
+def send_msg(msg):
+    print(msg)
+    port = 465  # for SSL
+    context = ssl.create_default_context()
+
+    with smtplib.SMTP_SSL("smtp.gmail.com", port, context=context) as server:
+        server.login(EMAIL, "ehbyrzfkmkccgllq")
+        to_send = MIMEText(msg)
+        to_send["Subject"] = "Blog reader"
+        server.sendmail(EMAIL, [EMAIL], msg=to_send.as_string())
 
 
 @app.context_processor
@@ -28,7 +44,8 @@ def get_contact():
     if request.method == "POST":
         h1 = "Successfully sent message"
         name, email, tel, msg = request.form.values()
-        print(f"name: {name}, email: {email}, tel: {tel}, msg: {msg}")
+        email_msg = f"Name: {name}\nEmail: {email}\nTel: {tel}\nMessage: {msg}"
+        send_msg(email_msg)
     return render_template("contact.html", header=h1)
 
 
