@@ -1,5 +1,4 @@
 from datetime import datetime
-
 from flask import Flask, render_template
 import requests as req
 
@@ -19,13 +18,21 @@ def home():
 
 
 @app.route("/about")
-def about():
+def get_about():
     return render_template("about.html")
 
 
 @app.route("/contact")
-def contact():
+def get_contact():
     return render_template("contact.html")
+
+
+@app.route("/post/<pid>")
+def get_post(pid):
+    posts_filter = [p for p in POSTS if str(p["id"]) == pid]
+    post = posts_filter[0] if len(posts_filter) == 1 else Exception(ValueError)
+
+    return render_template("post.html", post=post)
 
 
 if __name__ == '__main__':

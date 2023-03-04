@@ -6,7 +6,7 @@
             <div class="col-md-10 col-lg-8 col-xl-7">
                 <div class="site-heading">
                     <h1>NT's Blog</h1>
-                    <span class="subheading">A Blog Theme by Start Bootstrap</span>
+                    <!--                    <span class="subheading">A Blog Theme by Start Bootstrap</span>-->
                 </div>
             </div>
         </div>
@@ -19,14 +19,14 @@
             <!-- Post preview-->
             {% for p in posts %}
             <div class="post-preview">
-                <a href="post.html">
+                <a href="{{ url_for('get_post', pid=p.id) }}">
                     <h2 class="post-title">{{ p.title }}</h2>
                     <h3 class="post-subtitle">{{ p.subtitle }}</h3>
                 </a>
                 <p class="post-meta">
                     Posted by
-                    <a href="{{ url_for('about') }}">Natiel Traore</a>
-                    on September 24, 2022
+                    <a target="_blank" href="{{ url_for('get_about') }}">Natiel Traore</a>
+                    on {{ p.date }}
                 </p>
             </div>
             <!-- Divider-->
