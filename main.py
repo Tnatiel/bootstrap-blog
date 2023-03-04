@@ -1,5 +1,5 @@
 from datetime import datetime
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 import requests as req
 
 POSTS = req.get("https://api.npoint.io/511981ad9e97d831283f").json()
@@ -22,16 +22,20 @@ def get_about():
     return render_template("about.html")
 
 
-@app.route("/contact")
+@app.route("/contact", methods=["GET", "POST"])
 def get_contact():
-    return render_template("contact.html")
+    h1 = "Contact Me"
+    if request.method == "POST":
+        h1 = "Successfully sent message"
+        name, email, tel, msg = request.form.values()
+        print(f"name: {name}, email: {email}, tel: {tel}, msg: {msg}")
+    return render_template("contact.html", header=h1)
 
 
 @app.route("/post/<pid>")
 def get_post(pid):
     posts_filter = [p for p in POSTS if str(p["id"]) == pid]
     post = posts_filter[0] if len(posts_filter) == 1 else Exception(ValueError)
-
     return render_template("post.html", post=post)
 
 
