@@ -10,7 +10,6 @@ from wtforms import Form, StringField, SubmitField
 from wtforms.validators import InputRequired, URL
 
 EMAIL = "ntgk666@gmail.com"
-POSTS = req.get("https://api.npoint.io/511981ad9e97d831283f").json()
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '8BYkEfBA6O6donzWlSihBXox7C0sKR6b'
 app.config['CURRENT_YEAR'] = datetime.now().year
@@ -60,7 +59,8 @@ def year_injector():
 
 @app.route("/")
 def home():
-    return render_template("index.html", posts=POSTS)
+    posts = db.session.query(BlogPost).all()
+    return render_template("index.html", posts=posts)
 
 
 @app.route("/about")
@@ -81,7 +81,8 @@ def get_contact():
 
 @app.route("/post/<pid>")
 def get_post(pid):
-    posts_filter = [p for p in POSTS if str(p["id"]) == pid]
+    posts = db.session.query(BlogPost).all()
+    posts_filter = [p for p in posts if str(p.id) == pid]
     post = posts_filter[0] if len(posts_filter) == 1 else Exception(ValueError)
     return render_template("post.html", post=post)
 
