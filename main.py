@@ -59,16 +59,11 @@ def send_msg(msg):
         server.sendmail(EMAIL, [EMAIL], msg=to_send.as_string())
 
 
-# --------------------- END POINTS --------------------------
 @app.context_processor
 def year_injector():
     return {"year": app.config["CURRENT_YEAR"]}
 
-
-@app.route("/")
-def home():
-    posts = db.session.query(BlogPost).all()
-    return render_template("index.html", posts=posts)
+# --------------------- END POINTS --------------------------
 
 
 @app.route("/about")
@@ -85,6 +80,14 @@ def get_contact():
         email_msg = f"Name: {name}\nEmail: {email}\nTel: {tel}\nMessage: {msg}"
         send_msg(email_msg)
     return render_template("contact.html", header=h1)
+
+
+# --------------------- Blog CRUD --------------------------
+
+@app.route("/")
+def home():
+    posts = db.session.query(BlogPost).all()
+    return render_template("index.html", posts=posts)
 
 
 @app.route("/post/<pid>")
@@ -144,6 +147,21 @@ def delete_post(pid):
     db.session.commit()
     return redirect(url_for("home"))
 
+
+# --------------------- Users CRUD --------------------------
+@app.route('/register')
+def register():
+    return render_template("register.html")
+
+
+@app.route('/login')
+def login():
+    return render_template("login.html")
+
+
+@app.route('/logout')
+def logout():
+    return redirect(url_for('get_all_posts'))
 
 if __name__ == '__main__':
     app.run(debug=True)
