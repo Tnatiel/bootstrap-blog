@@ -11259,6 +11259,16 @@ header.masthead:before {
     color: red
 }
 
+/* Delete Button */
+
+.delete-btn {
+    float: right;
+    visibility:hidden;
+}
+.post-preview:hover .delete-btn {
+    visibility: visible;
+}
+
 
 @media (min-width: 992px) {
   .post-preview > a > .post-title {
