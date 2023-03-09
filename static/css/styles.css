@@ -11241,6 +11241,18 @@ header.masthead .site-heading .h1 {
 .post-preview > .post-meta > a {
   text-decoration: none;
 }
+
+/* my styles*/
+
+.form-group {
+    margin-bottom: 1vh;
+}
+.control-label {
+    margin-bottom: 0.5vh;
+}
+
+
+
 @media (min-width: 992px) {
   .post-preview > a > .post-title {
     font-size: 2.25rem;

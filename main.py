@@ -2,18 +2,22 @@ import smtplib
 import ssl
 from email.mime.text import MIMEText
 from datetime import datetime
-import requests as req
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, url_for
 from flask_bootstrap import Bootstrap
 from flask_sqlalchemy import SQLAlchemy
-from wtforms import Form, StringField, SubmitField
+from wtforms import Form, StringField, SubmitField, HiddenField
 from wtforms.validators import InputRequired, URL
+from flask_ckeditor import CKEditor, CKEditorField
 
 EMAIL = "ntgk666@gmail.com"
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '8BYkEfBA6O6donzWlSihBXox7C0sKR6b'
 app.config['CURRENT_YEAR'] = datetime.now().year
 Bootstrap(app)
+
+# CKEditor
+ckeditor = CKEditor(app)
+app.config['CKEDITOR_PKG_TYPE'] = 'basic'
 
 
 # CONNECT TO DB
@@ -34,12 +38,14 @@ class BlogPost(db.Model):
 
 # WTForm
 class CreatePostForm(Form):
+    hidden_tag = HiddenField()
     title = StringField("Blog Post Title", validators=[InputRequired()])
     subtitle = StringField("Subtitle", validators=[InputRequired()])
     author = StringField("Your Name", validators=[InputRequired()])
     img_url = StringField("Blog Image URL", validators=[InputRequired(), URL()])
-    body = StringField("Blog Content", validators=[InputRequired()])
+    body = CKEditorField("Blog Content", validators=[InputRequired()])
     submit = SubmitField("Submit Post")
+
 
 def send_msg(msg):
     port = 465  # for SSL
@@ -52,6 +58,7 @@ def send_msg(msg):
         server.sendmail(EMAIL, [EMAIL], msg=to_send.as_string())
 
 
+# --------------------- END POINTS --------------------------
 @app.context_processor
 def year_injector():
     return {"year": app.config["CURRENT_YEAR"]}
@@ -85,6 +92,25 @@ def get_post(pid):
     posts_filter = [p for p in posts if str(p.id) == pid]
     post = posts_filter[0] if len(posts_filter) == 1 else Exception(ValueError)
     return render_template("post.html", post=post)
+
+
+@app.route("/new_post", methods=["GET", "POST"])
+def add_post():
+    form = CreatePostForm(request.form)
+    if request.method == "POST" and form.validate():
+        new_post = BlogPost(
+            title=request.form.get("title"),
+            subtitle=request.form.get("subtitle"),
+            date=datetime.now().strftime("%B %d %Y"),
+            body=request.form.get("body"),
+            img_url=request.form.get("img_url"),
+            author=request.form.get("author")
+        )
+        db.session.add(new_post)
+        db.session.commit()
+        return redirect(url_for("home"))
+
+    return render_template("make-post.html", form=form)
 
 
 if __name__ == '__main__':
