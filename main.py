@@ -1,13 +1,13 @@
 import smtplib
 import ssl
-from email.mime.text import MIMEText
 from datetime import datetime
+from email.mime.text import MIMEText
 from flask import Flask, render_template, request, redirect, url_for
 from flask_bootstrap import Bootstrap
+from flask_ckeditor import CKEditor, CKEditorField
 from flask_sqlalchemy import SQLAlchemy
 from wtforms import Form, StringField, SubmitField, HiddenField
 from wtforms.validators import InputRequired, URL
-from flask_ckeditor import CKEditor, CKEditorField
 
 EMAIL = "ntgk666@gmail.com"
 app = Flask(__name__)
@@ -24,6 +24,7 @@ app.config['CKEDITOR_PKG_TYPE'] = 'basic'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///posts.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+
 
 # CONFIGURE TABLE
 class BlogPost(db.Model):
@@ -94,7 +95,7 @@ def get_post(pid):
     return render_template("post.html", post=post)
 
 
-@app.route("/new_post", methods=["GET", "POST"])
+@app.route("/new-post", methods=["GET", "POST"])
 def add_post():
     form = CreatePostForm(request.form)
     if request.method == "POST" and form.validate():
@@ -110,7 +111,30 @@ def add_post():
         db.session.commit()
         return redirect(url_for("home"))
 
-    return render_template("make-post.html", form=form)
+    return render_template("make-post.html", form=form, edit_mode=False)
+
+
+@app.route("/edit-post/<post_id>", methods=["POST", "GET"])
+def edit_post(post_id):
+    post = BlogPost.query.filter_by(id=post_id).first()
+    edit_form = CreatePostForm(
+        title=post.title,
+        subtitle=post.subtitle,
+        img_url=post.img_url,
+        author=post.author,
+        body=post.body
+    )
+    updated_form = CreatePostForm(request.form)
+
+    if request.method == "POST" and updated_form.validate():
+        post.title = updated_form.title != post.title and updated_form.title.data
+        post.subtitle = updated_form.subtitle != post.subtitle and updated_form.subtitle.data
+        post.img_url = updated_form.img_url != post.img_url and updated_form.img_url.data
+        post.author = updated_form.author != post.author and updated_form.author.data
+        post.body = updated_form.body != post.body and updated_form.body.data
+        db.session.commit()
+        return redirect(url_for("home"))
+    return render_template("make-post.html", form=edit_form, edit_mode=True)
 
 
 if __name__ == '__main__':

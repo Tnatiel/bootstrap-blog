@@ -11251,6 +11251,13 @@ header.masthead .site-heading .h1 {
     margin-bottom: 0.5vh;
 }
 
+header.masthead:before {
+    opacity: 0;
+}
+
+.help-block {
+    color: red
+}
 
 
 @media (min-width: 992px) {
