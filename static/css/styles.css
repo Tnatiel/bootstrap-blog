@@ -11244,6 +11244,8 @@ header.masthead .site-heading .h1 {
 
 /* my styles*/
 
+/* Global Rules */
+
 .form-group {
     margin-bottom: 1vh;
 }
@@ -11252,11 +11254,12 @@ header.masthead .site-heading .h1 {
 }
 
 header.masthead:before {
-    opacity: 0;
+    opacity: 0.15;
 }
 
 .help-block {
-    color: red
+    color: red;
+    font-size: 1rem;
 }
 
 /* Delete Button */
