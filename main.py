@@ -2,7 +2,7 @@ import smtplib
 import ssl
 from datetime import datetime
 from email.mime.text import MIMEText
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_bootstrap import Bootstrap
 from flask_ckeditor import CKEditor
 from flask_sqlalchemy import SQLAlchemy
@@ -172,6 +172,9 @@ def delete_post(pid):
 def register():
     form = RegisterForm(request.form)
     if request.method == "POST" and form.validate():
+        if User.query.filter_by(email=form.user_email.data).first():
+            flash("You've already sign in with that email address. Sign in instead!")
+            return redirect(url_for("login"))
         hashed_password = generate_password_hash(form.password.data, salt_length=8)
         user = User(
             name=form.name.data,
@@ -182,6 +185,7 @@ def register():
         db.session.commit()
         login_user(user)
         app.config["LOGGED_IN"] = True
+        flash("Sign up successfully")
         return redirect(url_for("home"))
     return render_template("register.html", form=form)
 
@@ -193,14 +197,14 @@ def login():
     if request.method == "POST" and form.validate():
         user = User.query.filter_by(email=request.form.get("user_email")).first()
         if not user:
-            error = "That email doesn't exist, please try again"
+            flash("That email doesn't exist, please try again")
         elif check_password_hash(user.password, request.form.get("password")):
             login_user(user)
             app.config["LOGGED_IN"] = True
             return redirect(url_for("home"))
         else:
-            error = "The password doesn't match, please try again"
-    return render_template("login.html", form=form, error=error)
+            flash("The password doesn't match, please try again")
+    return render_template("login.html", form=form)
 
 
 @app.route('/logout')

@@ -1,6 +1,6 @@
 from flask_wtf import Form
 from wtforms import StringField, SubmitField, PasswordField, HiddenField, EmailField
-from wtforms.validators import URL, InputRequired, Email
+from wtforms.validators import URL, InputRequired, Email, Length
 from flask_ckeditor import CKEditorField
 
 # WTForm
@@ -20,7 +20,11 @@ class RegisterForm(Form):
     hidden_tag = HiddenField()
     name = StringField("Name", validators=[InputRequired()])
     user_email = EmailField("Email", validators=[InputRequired(), Email()])
-    password = PasswordField("Password", validators=[InputRequired()])
+    password = PasswordField("Password", validators=[
+        InputRequired(),
+        Length(min=6, message="That password is too short"),
+        Length(max=30, message="That password is too long")
+    ])
     submit = SubmitField("Sign Me Up!")
 
 
