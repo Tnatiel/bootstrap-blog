@@ -1,5 +1,4 @@
 {% import "bootstrap/wtf.html" as wtf %}
-
 {% block head %}
   {{ ckeditor.load() }}
 {% endblock %}
@@ -42,13 +41,14 @@
                         </form>
                         <!-- Rendering Comments -->
                         <div class="comment-sec">
+                            {% set default_imgs = ["monsterid", "identicon", "mp" ,"wavatar" ,"retro", "robohash"] %}
                             {% for cmt in post.blog_comments %}
                             <div class="comment" style="background-color: red">
-                                <div class="img-text-wrap">
-                                    <img class="rounded-circle profile-pic" src="" alt="Profile pic">
+                                <img class="rounded-circle profile-pic" src="https://www.gravatar.com/avatar/{{ post.author.password }}?r=r&d={{ img_picker(default_imgs) }}" alt="Profile pic">
+                                <div class="comment-text-wrap">
                                     <h6 class="comment-text">{{ cmt.text | safe }}</h6>
+                                    <span class="text-muted comment-author ">{{ cmt.comment_author.name }}</span>
                                 </div>
-                                <span class="text-muted comment-author fs-6">{{ cmt.comment_author.name }}</span>
                             </div>
                             {% endfor %}
                         </div>
