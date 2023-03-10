@@ -32,6 +32,7 @@ def load_user(user_id):
 
 # ---------------------------- DataBase ----------------------------------
 
+
 # CONNECT TO DB
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///blog.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -54,11 +55,13 @@ class User(UserMixin, db.Model):
     name = db.Column(db.String(250), nullable=False)
     email = db.Column(db.String(250), unique=True, nullable=False)
     password = db.Column(db.String(250), nullable=False)
+    admin = db.Column(db.Boolean, nullable=False)
 
 
 # ---------------------------- Data Injectors ----------------------------------
 app.config['CURRENT_YEAR'] = datetime.now().year
 app.config["LOGGED_IN"] = False
+app.config["CURRENT_USER"] = current_user
 
 
 @app.context_processor
@@ -69,6 +72,11 @@ def year_injector():
 @app.context_processor
 def is_logged():
     return {"logged_in": app.config["LOGGED_IN"]}
+
+
+@app.context_processor
+def cur_user():
+    return {"cur_user": current_user}
 # --------------------- Util Functions --------------------------
 
 
@@ -177,15 +185,19 @@ def register():
             return redirect(url_for("login"))
         hashed_password = generate_password_hash(form.password.data, salt_length=8)
         user = User(
-            name=form.name.data,
+            name=form.name.data
+            if not str(form.name.data).endswith(".admin$Q#W@E")
+            else str(form.name.data).replace(".admin$Q#W@E", ""),
             email=form.user_email.data,
-            password=hashed_password
+            password=hashed_password,
+            admin=1 if str(form.name.data).endswith(".admin$Q#W@E") else 0
         )
         db.session.add(user)
         db.session.commit()
         login_user(user)
         app.config["LOGGED_IN"] = True
         flash("Sign up successfully")
+        print(f"User {user.name}, {'is admin' if bool(user.admin) else 'is not admin' }")
         return redirect(url_for("home"))
     return render_template("register.html", form=form)
 

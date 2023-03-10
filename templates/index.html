@@ -36,9 +36,11 @@
             {% endfor %}
             <!-- Pager-->
             <!-- New Post -->
-            <div class="d-flex justify-content-end mb-4">
-                <a class="btn btn-primary float-right" href="{{ url_for('add_post') }}">Create New Post</a>
-            </div>
+            {% if cur_user.is_authenticated: %}
+                <div class="d-flex justify-content-end mb-4">
+                    <a class="btn btn-primary float-right" href="{{ url_for('add_post') }}">Create New Post</a>
+                </div>
+            {% endif %}
         </div>
     </div>
 </div>

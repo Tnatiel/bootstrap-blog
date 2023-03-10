@@ -12,7 +12,7 @@ Jinja, and Flask for the front and back end. The site mostly uses Bootstrap clas
 
 Before you start working with Flask Bootstrap Blog, 
 you need to ensure that you have the following tools installed:
-* Python 3.10^
+* Python 3.11
 * Flask
 * Flask-Bootstrap
 * Flask-CKEditor
