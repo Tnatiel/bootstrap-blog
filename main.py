@@ -10,7 +10,6 @@ from flask_login import UserMixin, login_user, LoginManager, login_required, cur
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import relationship, declarative_base
 from werkzeug.security import generate_password_hash, check_password_hash
-
 from forms import CreatePostForm, RegisterForm, LoginForm, CommentsForm
 
 EMAIL = "ntgk666@gmail.com"
@@ -46,6 +45,29 @@ Base = declarative_base()
 
 
 # CONFIGURE TABLES
+class Comment(db.Model, Base):
+    __tablename__ = "comments"
+    comment_id = db.Column(db.Integer, primary_key=True)
+
+    author_id = db.Column(db.Integer, db.ForeignKey("user.id"))
+    comment_author = relationship("User", back_populates="user_comments")
+
+    post_id = db.Column(db.Integer, db.ForeignKey("blog_post.post_id"))
+    post = relationship("BlogPost", back_populates="blog_comments")
+
+    text = db.Column(db.Text, nullable=False)
+
+
+class User(UserMixin, db.Model, Base):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(250), nullable=False)
+    email = db.Column(db.String(250), unique=True, nullable=False)
+    password = db.Column(db.String(250), nullable=False)
+    admin = db.Column(db.Boolean, nullable=False)
+    posts = relationship("BlogPost", back_populates="author")
+    user_comments = relationship("Comment", back_populates="comment_author")
+
+
 class BlogPost(db.Model, Base):
     post_id = db.Column(db.Integer, primary_key=True)
     author_id = db.Column(db.Integer, db.ForeignKey("user.id"))
@@ -56,15 +78,12 @@ class BlogPost(db.Model, Base):
     body = db.Column(db.Text, nullable=False)
     img_url = db.Column(db.String(250), nullable=False)
 
-
-class User(UserMixin, db.Model, Base):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(250), nullable=False)
-    email = db.Column(db.String(250), unique=True, nullable=False)
-    password = db.Column(db.String(250), nullable=False)
-    admin = db.Column(db.Boolean, nullable=False)
-    posts = relationship("BlogPost", back_populates="author")
-
+    blog_comments = relationship("Comment", back_populates="post")
+#
+#
+# with app.app_context():
+#     print("yeahhh im creating!!!!!!")
+#     db.create_all()
 
 # ---------------------------- Data Injectors ----------------------------------
 app.config['CURRENT_YEAR'] = datetime.now().year
@@ -139,6 +158,20 @@ def get_post(pid):
     post = BlogPost.query.filter_by(post_id=pid).first()
     comment_form = CommentsForm(request.form)
     if post:
+        if request.method == "POST" and comment_form.validate():
+            if current_user.is_authenticated:
+                new_comment = Comment(
+                    author_id=current_user.id,
+                    comment_author=current_user,
+                    post_id=pid,
+                    post=post,
+                    text=comment_form.comment.data
+                )
+                db.session.add(new_comment)
+                db.session.commit()
+            else:
+                flash("You need to login to comment")
+                return redirect(url_for("login"))
         return render_template("post.html", post=post, form=comment_form)
     return flask.abort(404)
 
@@ -151,7 +184,7 @@ def add_post():
         new_post = BlogPost(
             title=form.title.data.title(),
             subtitle=form.subtitle.data,
-            date=datetime.now().strftime("%B %d %Y"),
+            date=datetime.now().strftime("%B %d, %Y"),
             body=form.body.data,
             img_url=form.img_url.data,
             author=app.config["CURRENT_USER"],

@@ -30,15 +30,17 @@
             <div class="col-md-10 col-lg-8 col-xl-7">
                 <p>{{ post.body | safe }}</p>
                 <!-- Edit Post Button -->
-                <div class="d-flex">
+<!--                <div class="d-flex">-->
 
                     <div id="comment-form" class="justify-content mb-4">
-                        {{ wtf.form_field(form.comment, novalidate=True) }}
-                        {{ wtf.form_field(form.submit, class_="btn btn-primary float-start") }}
+                        <form method="post" action="{{ url_for('get_post', pid=post.post_id) }}">
+                            {{ wtf.form_field(form.comment, novalidate=True) }}
+                            {{ wtf.form_field(form.submit, class_="btn btn-primary float-start") }}
+                        </form>
                         {% if cur_user.admin or cur_user.id == post.author.id %}
                           <a class="btn btn-primary float-end" href="{{url_for('edit_post', post_id=post.post_id)}}">Edit Post</a>
                         {% endif %}
-                    </div>
+<!--                    </div>-->
                 </div>
             </div>
         </div>
