@@ -11,13 +11,14 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import relationship, declarative_base
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from forms import CreatePostForm, RegisterForm, LoginForm
+from forms import CreatePostForm, RegisterForm, LoginForm, CommentsForm
 
 EMAIL = "ntgk666@gmail.com"
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '8BYkEfBA6O6donzWlSihBXox7C0sKR6b'
-Bootstrap(app)
+app.config['CKEDITOR_PKG_TYPE'] = 'full-all'
 ckeditor = CKEditor(app)
+Bootstrap(app)
 
 # ---------------------------- Flask Login ----------------------------------
 login_manager = LoginManager()
@@ -133,11 +134,12 @@ def home():
     return render_template("index.html", posts=posts)
 
 
-@app.route("/post/<int:pid>")
+@app.route("/post/<int:pid>", methods=["GET", "POST"])
 def get_post(pid):
     post = BlogPost.query.filter_by(post_id=pid).first()
+    comment_form = CommentsForm(request.form)
     if post:
-        return render_template("post.html", post=post)
+        return render_template("post.html", post=post, form=comment_form)
     return flask.abort(404)
 
 

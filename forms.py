@@ -1,9 +1,8 @@
+import wtforms
 from flask_wtf import Form
 from wtforms import StringField, SubmitField, PasswordField, HiddenField, EmailField
 from wtforms.validators import URL, InputRequired, Email, Length
 from flask_ckeditor import CKEditorField
-
-# WTForm
 
 
 class CreatePostForm(Form):
@@ -34,3 +33,8 @@ class LoginForm(Form):
     password = PasswordField("Password", validators=[InputRequired()])
     submit = SubmitField("Let Me In!")
 
+
+class CommentsForm(Form):
+    hidden_tag = HiddenField()
+    comment = CKEditorField("Comment", validators=[InputRequired()])
+    submit = SubmitField("Submit Comment")

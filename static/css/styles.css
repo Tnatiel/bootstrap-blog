@@ -11283,7 +11283,10 @@ header.light-main-bg.masthead:before {
 header.light-main-bg#make-page.masthead:before {
     opacity: 0.10;
 }
-
+/* Make Page */
+header.light-main-bg#make-page.masthead:before {
+    opacity: 0.10;
+}
 
 /********************* End Of My Styles ***********************/
 
