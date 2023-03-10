@@ -28,15 +28,19 @@ login_manager = LoginManager(app)
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return User.query.filter_by(id=user_id).first()
 
 # ---------------------------- DataBase ----------------------------------
 
 
 # CONNECT TO DB
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///blog.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 db = SQLAlchemy(app)
+
+# Users:
+# Admins ['Erick', 'erick@email.com', '111111'
+# Regular ['Malman', 'malman@email.com', '123123'
 
 
 # CONFIGURE TABLES
@@ -47,6 +51,7 @@ class BlogPost(db.Model):
     date = db.Column(db.String(250), nullable=False)
     body = db.Column(db.Text, nullable=False)
     author = db.Column(db.String(250), nullable=False)
+    user_email = db.Column(db.String(250), nullable=False)
     img_url = db.Column(db.String(250), nullable=False)
 
 
@@ -60,8 +65,8 @@ class User(UserMixin, db.Model):
 
 # ---------------------------- Data Injectors ----------------------------------
 app.config['CURRENT_YEAR'] = datetime.now().year
-app.config["LOGGED_IN"] = False
-app.config["CURRENT_USER"] = current_user
+app.config["CURRENT_USER"] = None
+print(current_user)
 
 
 @app.context_processor
@@ -70,13 +75,8 @@ def year_injector():
 
 
 @app.context_processor
-def is_logged():
-    return {"logged_in": app.config["LOGGED_IN"]}
-
-
-@app.context_processor
 def cur_user():
-    return {"cur_user": current_user}
+    return {"cur_user": app.config["CURRENT_USER"]}
 # --------------------- Util Functions --------------------------
 
 
@@ -126,6 +126,7 @@ def get_post(pid):
 
 
 @app.route("/new-post", methods=["GET", "POST"])
+@login_required
 def add_post():
     form = CreatePostForm(request.form)
     if request.method == "POST" and form.validate():
@@ -135,7 +136,8 @@ def add_post():
             date=datetime.now().strftime("%B %d %Y"),
             body=request.form.get("body"),
             img_url=request.form.get("img_url"),
-            author=request.form.get("author")
+            author=request.form.get("author"),
+            user_email=cur_user.email
         )
         db.session.add(new_post)
         db.session.commit()
@@ -145,6 +147,7 @@ def add_post():
 
 
 @app.route("/edit-post/<post_id>", methods=["POST", "GET"])
+@login_required
 def edit_post(post_id):
     post = BlogPost.query.filter_by(id=post_id).first()
     edit_form = CreatePostForm(
@@ -188,15 +191,14 @@ def register():
             name=form.name.data
             if not str(form.name.data).endswith(".admin$Q#W@E")
             else str(form.name.data).replace(".admin$Q#W@E", ""),
-            email=form.user_email.data,
+            email=str(form.user_email.data).lower(),
             password=hashed_password,
             admin=1 if str(form.name.data).endswith(".admin$Q#W@E") else 0
         )
         db.session.add(user)
         db.session.commit()
         login_user(user)
-        app.config["LOGGED_IN"] = True
-        flash("Sign up successfully")
+        app.config["CURRENT_USER"] = current_user
         print(f"User {user.name}, {'is admin' if bool(user.admin) else 'is not admin' }")
         return redirect(url_for("home"))
     return render_template("register.html", form=form)
@@ -205,14 +207,13 @@ def register():
 @app.route('/login', methods=["POST", "GET"])
 def login():
     form = LoginForm(request.form)
-    error = None
     if request.method == "POST" and form.validate():
         user = User.query.filter_by(email=request.form.get("user_email")).first()
         if not user:
             flash("That email doesn't exist, please try again")
         elif check_password_hash(user.password, request.form.get("password")):
             login_user(user)
-            app.config["LOGGED_IN"] = True
+            app.config["CURRENT_USER"] = current_user
             return redirect(url_for("home"))
         else:
             flash("The password doesn't match, please try again")
@@ -222,7 +223,7 @@ def login():
 @app.route('/logout')
 def logout():
     logout_user()
-    app.config["LOGGED_IN"] = False
+    app.config["CURRENT_USER"] = None
     return redirect(url_for('home'))
 
 

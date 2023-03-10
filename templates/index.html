@@ -6,6 +6,9 @@
             <div class="col-md-10 col-lg-8 col-xl-7">
                 <div class="site-heading">
                     <h1>NT's Blog</h1>
+                    {% if cur_user.is_authenticated %}
+                        <span class="subheading">Hello {{ cur_user.name }}</span>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -18,7 +21,10 @@
             <!-- Post preview-->
             {% for p in posts %}
             <div class="post-preview">
-                <a href="{{ url_for('delete_post', pid=p.id) }}" class="delete-btn d-flex justify-content-end">✘</a>
+                <!-- Delete Button -->
+                {% if cur_user.admin or cur_user.email == p.user_email %}
+                    <a href="{{ url_for('delete_post', pid=p.id) }}" class="delete-btn d-flex justify-content-end">✘</a>
+                {% endif %}
                 <a href="{{ url_for('get_post', pid=p.id) }}">
                     <h2 class="post-title">
                         {{ p.title }}
@@ -27,7 +33,7 @@
                 </a>
                 <p class="post-meta">
                     Posted by
-                    <a href="#">{{ p.author}}</a>
+                    <a href="#">{{ p.author }}</a>
                     on {{ p.date }}
                 </p>
             </div>
