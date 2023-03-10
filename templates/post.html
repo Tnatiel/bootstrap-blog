@@ -30,17 +30,29 @@
             <div class="col-md-10 col-lg-8 col-xl-7">
                 <p>{{ post.body | safe }}</p>
                 <!-- Edit Post Button -->
-<!--                <div class="d-flex">-->
+                <div class="d-flex">
 
-                    <div id="comment-form" class="justify-content mb-4">
+                    <div id="comment-form d-flex" class="justify-content mb-4">
                         <form method="post" action="{{ url_for('get_post', pid=post.post_id) }}">
                             {{ wtf.form_field(form.comment, novalidate=True) }}
                             {{ wtf.form_field(form.submit, class_="btn btn-primary float-start") }}
+                            {% if cur_user.admin or cur_user.id == post.author.id %}
+                              <a class="btn btn-primary float-end" href="{{url_for('edit_post', post_id=post.post_id)}}">Edit Post</a>
+                            {% endif %}
                         </form>
-                        {% if cur_user.admin or cur_user.id == post.author.id %}
-                          <a class="btn btn-primary float-end" href="{{url_for('edit_post', post_id=post.post_id)}}">Edit Post</a>
-                        {% endif %}
-<!--                    </div>-->
+                        <!-- Rendering Comments -->
+                        <div class="comment-sec">
+                            {% for cmt in post.blog_comments %}
+                            <div class="comment" style="background-color: red">
+                                <div class="img-text-wrap">
+                                    <img class="rounded-circle profile-pic" src="" alt="Profile pic">
+                                    <h6 class="comment-text">{{ cmt.text | safe }}</h6>
+                                </div>
+                                <span class="text-muted comment-author fs-6">{{ cmt.comment_author.name }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

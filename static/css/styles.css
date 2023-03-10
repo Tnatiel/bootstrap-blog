@@ -11283,9 +11283,40 @@ header.light-main-bg.masthead:before {
 header.light-main-bg#make-page.masthead:before {
     opacity: 0.10;
 }
-/* Make Page */
-header.light-main-bg#make-page.masthead:before {
-    opacity: 0.10;
+
+
+/* Post Page - Comments */
+.comment-sec {
+
+    margin: 20vh auto 2vh;
+}
+
+
+img.profile-pic {
+    display: inline;
+}
+
+.comment-text, .comment-sec  h6 > p  {
+    font-size: 1rem;
+    margin: 0;
+    display: inline-box;
+}
+.comment-sec > .comment {
+    padding: 2.5vh 0 2.5vh 1vw;
+    border:solid
+}
+
+.comment-sec > .comment > .comment-author {
+    padding: 0.5vw;
+}
+
+
+.img-text-wrap {
+    display: flex;
+    flex-direction: row;
+    gap: 1vw;
+    align-items: center;
+    margin-bottom: 0.5vh;
 }
 
 /********************* End Of My Styles ***********************/

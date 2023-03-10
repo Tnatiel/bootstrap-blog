@@ -33,7 +33,7 @@ def load_user(user_id):
 
 
 # CONNECT TO DB
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///blog.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///blog1.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 db = SQLAlchemy(app)
 Base = declarative_base()
@@ -156,23 +156,25 @@ def home():
 @app.route("/post/<int:pid>", methods=["GET", "POST"])
 def get_post(pid):
     post = BlogPost.query.filter_by(post_id=pid).first()
-    comment_form = CommentsForm(request.form)
     if post:
-        if request.method == "POST" and comment_form.validate():
+        if request.method == "POST" and CommentsForm(request.form).validate():
             if current_user.is_authenticated:
                 new_comment = Comment(
                     author_id=current_user.id,
                     comment_author=current_user,
                     post_id=pid,
                     post=post,
-                    text=comment_form.comment.data
+                    text=CommentsForm(request.form).comment.data
                 )
+                print(new_comment.__dict__)
                 db.session.add(new_comment)
                 db.session.commit()
             else:
                 flash("You need to login to comment")
                 return redirect(url_for("login"))
-        return render_template("post.html", post=post, form=comment_form)
+        form = CommentsForm(request.form)
+        form.comment.data = ""
+        return render_template("post.html", post=post, form=form, comments=db.session.query(Comment).all())
     return flask.abort(404)
 
 
