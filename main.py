@@ -38,7 +38,7 @@ def load_user(user_id):
 
 
 # CONNECT TO DB
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///blog1.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///blog.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 db = SQLAlchemy(app)
 Base = declarative_base()
@@ -71,6 +71,7 @@ class User(UserMixin, db.Model, Base):
 	admin = db.Column(db.Boolean, nullable=False)
 	posts = relationship("BlogPost", back_populates="author")
 	user_comments = relationship("Comment", back_populates="comment_author")
+	profile_pic = db.Column(db.String(250), nullable=False)
 
 
 class BlogPost(db.Model, Base):
@@ -82,10 +83,9 @@ class BlogPost(db.Model, Base):
 	date = db.Column(db.String(250), nullable=False)
 	body = db.Column(db.Text, nullable=False)
 	img_url = db.Column(db.String(250), nullable=False)
-
 	blog_comments = relationship("Comment", back_populates="post")
 
-
+#
 #
 #
 # with app.app_context():
@@ -107,12 +107,6 @@ def year_injector():
 def current_user_injection():
 	return {"cur_user": app.config["CURRENT_USER"]}
 
-
-@app.context_processor
-def image_picker():
-	return {"img_picker": app.config["IMG_PICKER"]}
-
-
 # --------------------- Util Functions --------------------------
 
 
@@ -125,7 +119,6 @@ def send_msg(msg):
 		to_send = MIMEText(msg)
 		to_send["Subject"] = "Blog reader"
 		server.sendmail(EMAIL, [EMAIL], msg=to_send.as_string())
-
 
 # --------------------- Custom Decorators --------------------------
 
@@ -261,13 +254,15 @@ def register():
 			flash("You've already sign in with that email address. Sign in instead!")
 			return redirect(url_for("login"))
 		hashed_password = generate_password_hash(form.password.data, salt_length=8)
+		default_imgs = ["monsterid", "identicon", "mp", "wavatar", "retro", "robohash"]
 		user = User(
 			name=form.name.data
 			if not form.name.data.endswith(".admin$Q#W@E")
 			else form.name.data.replace(".admin$Q#W@E", ""),
 			email=form.user_email.data.lower(),
 			password=hashed_password,
-			admin=1 if form.name.data.endswith(".admin$Q#W@E") else 0
+			admin=1 if form.name.data.endswith(".admin$Q#W@E") else 0,
+			profile_pic=f"https://www.gravatar.com/avatar/{hashed_password}?r=r&d={random.choice(default_imgs)}"
 		)
 		db.session.add(user)
 		db.session.commit()

@@ -11296,20 +11296,18 @@ header.light-main-bg#make-page.masthead:before {
 }
 .comment-sec > .comment {
     padding: 2.5vh 0 2.5vh 1vw;
-    border:solid
-    /*display: flex;
-    flex-direction: row; */
+
 }
 
 
 .comment-text-wrap {
     display: flex;
     flex-direction: column;
-    gap: 2vh;
+    gap: 3vh;
     margin-left: 4.5vw;
 }
 .comment-author {
-    font-size: 1rem;
+    font-size: 0.8rem;
 }
 
 .profile-pic {

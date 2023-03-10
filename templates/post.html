@@ -41,10 +41,10 @@
                         </form>
                         <!-- Rendering Comments -->
                         <div class="comment-sec">
-                            {% set default_imgs = ["monsterid", "identicon", "mp" ,"wavatar" ,"retro", "robohash"] %}
+
                             {% for cmt in post.blog_comments %}
-                            <div class="comment" style="background-color: red">
-                                <img class="rounded-circle profile-pic" src="https://www.gravatar.com/avatar/{{ post.author.password }}?r=r&d={{ img_picker(default_imgs) }}" alt="Profile pic">
+                            <div class="comment">
+                                <img class="rounded-circle profile-pic" src="{{ cmt.comment_author.profile_pic }}" alt="Profile pic">
                                 <div class="comment-text-wrap">
                                     <h6 class="comment-text">{{ cmt.text | safe }}</h6>
                                     <span class="text-muted comment-author ">{{ cmt.comment_author.name }}</span>
