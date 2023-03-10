@@ -24,7 +24,7 @@
             <div class="col-md-10 col-lg-8 col-xl-7">
                 <p>{{ post.body | safe }}</p>
                 <!-- Edit Post Button -->
-                {% if cur_user.admin or cur_user.email == post.user_email %}
+                {% if cur_user.admin or cur_user.id == post.author.id %}
                     <div class="d-flex justify-content-end mb-4">
                       <a class="btn btn-primary float-right" href="{{url_for('edit_post', post_id=post.post_id)}}">Edit Post</a>
                     </div>

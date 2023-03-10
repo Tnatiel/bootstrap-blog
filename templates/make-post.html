@@ -2,17 +2,17 @@
 {% import "bootstrap/wtf.html" as wtf %}
 
 {% block head %}
-{{ ckeditor.load(pkg_type="full-all") }}
+  {{ ckeditor.load(pkg_type="full-all") }}
 {% endblock %}
 
 {% block styles %}
-{{ super() }}
+  {{ super() }}
 {% endblock %}
 
 {% block content %}
-{% include "header.html" %}
+  {% include "header.html" %}
   <!-- Page Header -->
-  <header class="masthead" style="background-image: url('{{ url_for('static', filename='img/home-bg1.jpg')}}')">
+  <header class="masthead light-main-bg" id="make-page" style="background-image: url('{{ url_for('static', filename='img/home-bg.jpg')}}')">
     <div class="overlay"></div>
     <div class="container ">
       <div class="row ">
@@ -33,12 +33,12 @@
   <div class="container">
     <div class="row">
       <div class="col-lg-8 col-md-10 mx-auto">
-        
+
           {{ wtf.quick_form(form, novalidate=True, button_map={"submit": "primary"}) }}
 
       </div>
     </div>
   </div>
 
-{% include "footer.html" %}
+  {% include "footer.html" %}
 {% endblock %}

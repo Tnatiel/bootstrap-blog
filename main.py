@@ -6,21 +6,17 @@ import flask
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_bootstrap import Bootstrap
 from flask_ckeditor import CKEditor
+from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
 from flask_sqlalchemy import SQLAlchemy
-from flask_gravatar import Gravatar
-from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship, declarative_base
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
+
 from forms import CreatePostForm, RegisterForm, LoginForm
 
 EMAIL = "ntgk666@gmail.com"
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '8BYkEfBA6O6donzWlSihBXox7C0sKR6b'
 Bootstrap(app)
-
-
-# CKEditor
 ckeditor = CKEditor(app)
 
 # ---------------------------- Flask Login ----------------------------------
@@ -32,6 +28,7 @@ login_manager.init_app(app)
 def load_user(user_id):
     return User.query.filter_by(id=user_id).first()
 
+
 # ---------------------------- DataBase ----------------------------------
 
 
@@ -40,6 +37,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///blog.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 db = SQLAlchemy(app)
 Base = declarative_base()
+
 
 # Users:
 # Admins ['Erick', 'erick@email.com', '111111'
@@ -80,6 +78,8 @@ def year_injector():
 @app.context_processor
 def current_user_injection():
     return {"cur_user": app.config["CURRENT_USER"]}
+
+
 # --------------------- Util Functions --------------------------
 
 
@@ -99,11 +99,9 @@ def send_msg(msg):
 def admin_or_author(func):
     def wrap(*args, **kwargs):
         post = BlogPost.query.filter_by(post_id=kwargs.get("post_id")).first()
-
-        if not post or post.author.id != current_user.id \
-                or not current_user.admin:
-            return flask.abort(403)
-        return func(*args, **kwargs)
+        if post and post.author.id == current_user.id or current_user.admin:
+            return func(*args, **kwargs)
+        return flask.abort(403)
 
     wrap.__name__ = func.__name__
     return wrap
@@ -127,7 +125,7 @@ def get_contact():
     return render_template("contact.html", header=h1)
 
 
-# --------------------- Blog CRUD --------------------------
+# Blog CRUD
 
 @app.route("/")
 def home():
@@ -138,7 +136,9 @@ def home():
 @app.route("/post/<int:pid>")
 def get_post(pid):
     post = BlogPost.query.filter_by(post_id=pid).first()
-    return render_template("post.html", post=post)
+    if post:
+        return render_template("post.html", post=post)
+    return flask.abort(404)
 
 
 @app.route("/new-post", methods=["GET", "POST"])
@@ -146,7 +146,6 @@ def get_post(pid):
 def add_post():
     form = CreatePostForm(request.form)
     if request.method == "POST" and form.validate():
-
         new_post = BlogPost(
             title=form.title.data.title(),
             subtitle=form.subtitle.data,
@@ -178,10 +177,14 @@ def edit_post(post_id):
     updated_form = CreatePostForm(request.form)
 
     if request.method == "POST" and updated_form.validate():
-        post.title = updated_form.title.data != post.title and updated_form.title.data
-        post.subtitle = updated_form.subtitle.data != post.subtitle and updated_form.subtitle.data
-        post.img_url = updated_form.img_url.data != post.img_url and updated_form.img_url.data
-        post.body = updated_form.body.data != post.body and updated_form.body.data
+        if updated_form.title.data:
+            post.title = updated_form.title.data
+        if updated_form.subtitle.data:
+            post.subtitle = updated_form.subtitle.data
+        if updated_form.img_url.data:
+            post.img_url = updated_form.img_url.data
+        if updated_form.body.data:
+            post.body = updated_form.body.data
         db.session.commit()
         return redirect(url_for("get_post", pid=post_id))
     return render_template("make-post.html", form=edit_form, edit_mode=True)
@@ -190,10 +193,7 @@ def edit_post(post_id):
 @app.route('/delete/<int:post_id>')
 @admin_or_author
 def delete_post(post_id):
-
-    print(post_id)
     post = BlogPost.query.filter_by(post_id=post_id).first()
-    print(post)
     if post:
         db.session.delete(post)
         db.session.commit()
@@ -221,7 +221,6 @@ def register():
         db.session.commit()
         login_user(user)
         app.config["CURRENT_USER"] = current_user
-        # print(f"User {user.name}, {'is admin' if bool(user.admin) else 'is not admin' }")
         return redirect(url_for("home"))
     return render_template("register.html", form=form)
 

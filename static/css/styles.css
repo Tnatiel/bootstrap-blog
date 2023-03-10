@@ -11242,7 +11242,7 @@ header.masthead .site-heading .h1 {
   text-decoration: none;
 }
 
-/* my styles*/
+/********************* My Styles ***********************/
 
 /* Global Rules */
 
@@ -11253,15 +11253,21 @@ header.masthead .site-heading .h1 {
     margin-bottom: 0.5vh;
 }
 
-header.masthead:before {
-    opacity: 0.15;
-}
-
 .help-block {
     color: red;
     font-size: 1rem;
     margin 0.5rem 0;
 }
+
+header.dark-main-bg.masthead:before {
+    opacity: 0.45;
+}
+
+
+header.light-main-bg.masthead:before {
+    opacity: 0.25;
+}
+
 
 /* Delete Button */
 
@@ -11272,6 +11278,14 @@ header.masthead:before {
 .post-preview:hover .delete-btn {
     visibility: visible;
 }
+
+/* Make Page */
+header.light-main-bg#make-page.masthead:before {
+    opacity: 0.10;
+}
+
+
+/********************* End Of My Styles ***********************/
 
 
 @media (min-width: 992px) {
