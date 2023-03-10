@@ -2,11 +2,9 @@
 
 ## Overview
 
-Flask Bootstrap Blog is a user-friendly web application that allows users to 
-create, edit, and delete blog posts. This blog project is built with Flask, 
-a Python-based web framework, and SQLite database support. It uses Bootstrap example templates, 
-Jinja, and Flask for the front and back end. The site mostly uses Bootstrap classes with little adaptations.
+Flask Bootstrap Blog is a user-friendly web application that allows users to create, edit, and delete blog posts, as well as leave comments. The blog includes user authentication and authorization, with two types of users: regular users and admin users. Regular users can create posts and edit/delete their own posts, while admin users have full control over all posts and comments. The site also utilizes Flask Gravatar for user profile pictures and password hashing for user security.
 
+This blog project is built with Flask, a Python-based web framework, and SQLite database support. It uses Bootstrap example templates, Jinja, and Flask for the front and back end.
 
 ## Prerequisites
 
@@ -16,6 +14,8 @@ you need to ensure that you have the following tools installed:
 * Flask
 * Flask-Bootstrap
 * Flask-CKEditor
+* Flask-Gravatar
+* Flask-Login
 * Flask-SQLAlchemy
 * WTForms
 
@@ -45,13 +45,17 @@ To run this project on your local machine, follow these steps:
 Flask Bootstrap Blog has the following features:
 
 * Home page with a list of blog posts.
-* Post page with the full text of a blog post.
+* Post page with the full text of a blog post and a comment section.
 * About page with information about the blog.
 * Contact page with a form to send an email message to the blog owner.
-* View existing blog posts
-* Create new posts
-* Edit existing posts
-* Delete posts
+* User authentication and authorization.
+* User profile pictures using Flask Gravatar.
+* Password hashing for user security.
+* View existing blog posts.
+* Create new posts.
+* Edit existing posts.
+* Delete posts.
+* Leave comments on posts.
 
 ## File Structure
 
@@ -59,10 +63,17 @@ Flask Bootstrap Blog has the following features:
 * `header.html`: The header of the blog's HTML template that contains the navigation bar.
 * `footer.html`: The footer of the blog's HTML template that contains the social media links.
 * `index.html`: The home page of the blog that displays a list of blog posts.
-* `post.html`: The post page of the blog that displays the full text of a blog post.
+* `post.html`: The post page of the blog that displays the full text of a blog post and a comment section.
 * `about.html`: The about page of the blog that displays information about the blog.
 * `contact.html`: The contact page of the blog that displays a form to send an email message to the blog owner.
-* `make-post.html`: The edit/add page of the blog that displays a form to edit/add the post.
+* `create_post.html`: The page of the blog that displays a form to create a new post.
+* `edit_post.html`: The page of the blog that displays a form to edit an existing post.
+* `delete_post.html`: The page of the blog that displays a confirmation message to delete a post.
+* `login.html`: The page of the blog that displays a form to log in to a user account.
+* `register.html`: The page of the blog that displays a form to register a new user account.
+* `profile.html`: The page of the blog that displays the current user's profile information and posts.
+* `comments.html`: The page of the blog that displays a list of comments for a post and a form to add a new comment.
+* `forms.py`: The file that defines the Flask-WTF forms used in the application.
 
 
 ## Technologies & Tools

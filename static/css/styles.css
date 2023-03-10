@@ -11268,6 +11268,11 @@ header.light-main-bg.masthead:before {
     opacity: 0.25;
 }
 
+.profile-pic-nav {
+    width: 2vw;
+
+}
+
 
 /* Delete Button */
 
