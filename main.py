@@ -2,12 +2,14 @@ import smtplib
 import ssl
 from datetime import datetime
 from email.mime.text import MIMEText
+import flask
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_bootstrap import Bootstrap
 from flask_ckeditor import CKEditor
 from flask_sqlalchemy import SQLAlchemy
 from flask_gravatar import Gravatar
-from sqlalchemy.orm import relationship
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import relationship, declarative_base
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
 from forms import CreatePostForm, RegisterForm, LoginForm
@@ -20,10 +22,10 @@ Bootstrap(app)
 
 # CKEditor
 ckeditor = CKEditor(app)
-app.config['CKEDITOR_PKG_TYPE'] = 'basic'
 
 # ---------------------------- Flask Login ----------------------------------
-login_manager = LoginManager(app)
+login_manager = LoginManager()
+login_manager.init_app(app)
 
 
 @login_manager.user_loader
@@ -37,6 +39,7 @@ def load_user(user_id):
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///blog.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 db = SQLAlchemy(app)
+Base = declarative_base()
 
 # Users:
 # Admins ['Erick', 'erick@email.com', '111111'
@@ -44,29 +47,29 @@ db = SQLAlchemy(app)
 
 
 # CONFIGURE TABLES
-class BlogPost(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+class BlogPost(db.Model, Base):
+    post_id = db.Column(db.Integer, primary_key=True)
+    author_id = db.Column(db.Integer, db.ForeignKey("user.id"))
+    author = relationship("User", back_populates="posts")
     title = db.Column(db.String(250), unique=True, nullable=False)
     subtitle = db.Column(db.String(250), nullable=False)
     date = db.Column(db.String(250), nullable=False)
     body = db.Column(db.Text, nullable=False)
-    author = db.Column(db.String(250), nullable=False)
-    user_email = db.Column(db.String(250), nullable=False)
     img_url = db.Column(db.String(250), nullable=False)
 
 
-class User(UserMixin, db.Model):
+class User(UserMixin, db.Model, Base):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(250), nullable=False)
     email = db.Column(db.String(250), unique=True, nullable=False)
     password = db.Column(db.String(250), nullable=False)
     admin = db.Column(db.Boolean, nullable=False)
+    posts = relationship("BlogPost", back_populates="author")
 
 
 # ---------------------------- Data Injectors ----------------------------------
 app.config['CURRENT_YEAR'] = datetime.now().year
-app.config["CURRENT_USER"] = None
-print(current_user)
+app.config["CURRENT_USER"] = current_user
 
 
 @app.context_processor
@@ -75,7 +78,7 @@ def year_injector():
 
 
 @app.context_processor
-def cur_user():
+def current_user_injection():
     return {"cur_user": app.config["CURRENT_USER"]}
 # --------------------- Util Functions --------------------------
 
@@ -90,7 +93,22 @@ def send_msg(msg):
         to_send["Subject"] = "Blog reader"
         server.sendmail(EMAIL, [EMAIL], msg=to_send.as_string())
 
-# --------------------- END POINTS --------------------------
+# --------------------- Custom Decorators --------------------------
+
+
+def admin_or_author(func):
+    def wrap(*args, **kwargs):
+        post = BlogPost.query.filter_by(post_id=kwargs.get("post_id")).first()
+
+        if not post or post.author.id != current_user.id \
+                or not current_user.admin:
+            return flask.abort(403)
+        return func(*args, **kwargs)
+
+    wrap.__name__ = func.__name__
+    return wrap
+
+# --------------------- End Points --------------------------
 
 
 @app.route("/about")
@@ -117,11 +135,9 @@ def home():
     return render_template("index.html", posts=posts)
 
 
-@app.route("/post/<pid>")
+@app.route("/post/<int:pid>")
 def get_post(pid):
-    posts = db.session.query(BlogPost).all()
-    posts_filter = [p for p in posts if str(p.id) == pid]
-    post = posts_filter[0] if len(posts_filter) == 1 else Exception(ValueError)
+    post = BlogPost.query.filter_by(post_id=pid).first()
     return render_template("post.html", post=post)
 
 
@@ -130,14 +146,14 @@ def get_post(pid):
 def add_post():
     form = CreatePostForm(request.form)
     if request.method == "POST" and form.validate():
+
         new_post = BlogPost(
-            title=request.form.get("title"),
-            subtitle=request.form.get("subtitle"),
+            title=form.title.data.title(),
+            subtitle=form.subtitle.data,
             date=datetime.now().strftime("%B %d %Y"),
-            body=request.form.get("body"),
-            img_url=request.form.get("img_url"),
-            author=request.form.get("author"),
-            user_email=cur_user.email
+            body=form.body.data,
+            img_url=form.img_url.data,
+            author=app.config["CURRENT_USER"],
         )
         db.session.add(new_post)
         db.session.commit()
@@ -146,35 +162,41 @@ def add_post():
     return render_template("make-post.html", form=form, edit_mode=False)
 
 
-@app.route("/edit-post/<post_id>", methods=["POST", "GET"])
-@login_required
+@app.route("/edit-post/<int:post_id>", methods=["POST", "GET"])
+@admin_or_author
 def edit_post(post_id):
-    post = BlogPost.query.filter_by(id=post_id).first()
+    post = BlogPost.query.filter_by(post_id=post_id).first()
     edit_form = CreatePostForm(
         title=post.title,
         subtitle=post.subtitle,
         img_url=post.img_url,
-        author=post.author,
+        author=post.author.name.title(),
         body=post.body
+
     )
+
     updated_form = CreatePostForm(request.form)
 
     if request.method == "POST" and updated_form.validate():
-        post.title = updated_form.title != post.title and updated_form.title.data
-        post.subtitle = updated_form.subtitle != post.subtitle and updated_form.subtitle.data
-        post.img_url = updated_form.img_url != post.img_url and updated_form.img_url.data
-        post.author = updated_form.author != post.author and updated_form.author.data
-        post.body = updated_form.body != post.body and updated_form.body.data
+        post.title = updated_form.title.data != post.title and updated_form.title.data
+        post.subtitle = updated_form.subtitle.data != post.subtitle and updated_form.subtitle.data
+        post.img_url = updated_form.img_url.data != post.img_url and updated_form.img_url.data
+        post.body = updated_form.body.data != post.body and updated_form.body.data
         db.session.commit()
-        return redirect(url_for("home"))
+        return redirect(url_for("get_post", pid=post_id))
     return render_template("make-post.html", form=edit_form, edit_mode=True)
 
 
-@app.route('/delete/<pid>')
-def delete_post(pid):
-    post = BlogPost.query.get(pid)
-    db.session.delete(post)
-    db.session.commit()
+@app.route('/delete/<int:post_id>')
+@admin_or_author
+def delete_post(post_id):
+
+    print(post_id)
+    post = BlogPost.query.filter_by(post_id=post_id).first()
+    print(post)
+    if post:
+        db.session.delete(post)
+        db.session.commit()
     return redirect(url_for("home"))
 
 
@@ -183,23 +205,23 @@ def delete_post(pid):
 def register():
     form = RegisterForm(request.form)
     if request.method == "POST" and form.validate():
-        if User.query.filter_by(email=form.user_email.data).first():
+        if User.query.filter_by(email=form.user_email.data.lower()).first():
             flash("You've already sign in with that email address. Sign in instead!")
             return redirect(url_for("login"))
         hashed_password = generate_password_hash(form.password.data, salt_length=8)
         user = User(
             name=form.name.data
-            if not str(form.name.data).endswith(".admin$Q#W@E")
-            else str(form.name.data).replace(".admin$Q#W@E", ""),
-            email=str(form.user_email.data).lower(),
+            if not form.name.data.endswith(".admin$Q#W@E")
+            else form.name.data.replace(".admin$Q#W@E", ""),
+            email=form.user_email.data.lower(),
             password=hashed_password,
-            admin=1 if str(form.name.data).endswith(".admin$Q#W@E") else 0
+            admin=1 if form.name.data.endswith(".admin$Q#W@E") else 0
         )
         db.session.add(user)
         db.session.commit()
         login_user(user)
         app.config["CURRENT_USER"] = current_user
-        print(f"User {user.name}, {'is admin' if bool(user.admin) else 'is not admin' }")
+        # print(f"User {user.name}, {'is admin' if bool(user.admin) else 'is not admin' }")
         return redirect(url_for("home"))
     return render_template("register.html", form=form)
 
@@ -208,7 +230,7 @@ def register():
 def login():
     form = LoginForm(request.form)
     if request.method == "POST" and form.validate():
-        user = User.query.filter_by(email=request.form.get("user_email")).first()
+        user = User.query.filter_by(email=request.form.get("user_email").lower()).first()
         if not user:
             flash("That email doesn't exist, please try again")
         elif check_password_hash(user.password, request.form.get("password")):
@@ -223,7 +245,7 @@ def login():
 @app.route('/logout')
 def logout():
     logout_user()
-    app.config["CURRENT_USER"] = None
+    app.config["CURRENT_USER"] = current_user
     return redirect(url_for('home'))
 
 

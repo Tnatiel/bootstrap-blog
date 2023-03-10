@@ -9,7 +9,7 @@
                     <h2 class="subheading">{{ post.subtitle }}</h2>
                     <span class="meta">
                         Posted by
-                        <a target="_blank" href="{{ url_for('get_about') }}">{{ post.author }}</a>
+                        <a target="_blank" href="{{ url_for('get_about') }}">{{ post.author.name }}</a>
                         on {{ post.date }}
                     </span>
                 </div>
@@ -26,7 +26,7 @@
                 <!-- Edit Post Button -->
                 {% if cur_user.admin or cur_user.email == post.user_email %}
                     <div class="d-flex justify-content-end mb-4">
-                      <a class="btn btn-primary float-right" href="{{url_for('edit_post', post_id=post.id)}}">Edit Post</a>
+                      <a class="btn btn-primary float-right" href="{{url_for('edit_post', post_id=post.post_id)}}">Edit Post</a>
                     </div>
                 {% endif %}
             </div>
